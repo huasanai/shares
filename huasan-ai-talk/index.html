@@ -1,0 +1,3381 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./fonts.css">
+  <title>prompt → skills → harness → OPC：画伞的 AI 实践与思考</title>
+  <style>
+    :root {
+      --bg: #f4efe7;
+      --bg-warm: #efe7d8;
+      --card: #ffffff;
+      --cream: #f0e6d6;
+      --paper: #fbf7ef;
+      --ink: #1a1714;
+      --deep: #1a1714;
+      --soft: #4a4540;
+      --mute: #8a847c;
+      --rule: #d8cfc1;
+      --rule-soft: #ebe3d4;
+      --accent: #c04a1a;
+      --accent-soft: #e8a586;
+      --accent-deep: #8a3210;
+      --good: #4a6a3a;
+      --blue: #365f73;
+      --warn: #b88a30;
+      --shadow: 0 1px 0 rgba(26,23,20,0.06), 0 18px 44px -22px rgba(26,23,20,0.24);
+      --shadow-soft: 0 1px 0 rgba(26,23,20,0.04), 0 8px 20px -14px rgba(26,23,20,0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      background: var(--bg);
+      color: var(--ink);
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        linear-gradient(90deg, rgba(26,23,20,0.028) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(26,23,20,0.022) 1px, transparent 1px),
+        var(--bg);
+      background-size: 80px 80px;
+      color: var(--ink);
+      font-family: "Newsreader", "Songti SC", Georgia, serif;
+      font-size: 17px;
+      line-height: 1.65;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      padding: 0;
+    }
+
+    a { color: inherit; }
+    button { font: inherit; cursor: pointer; border: 0; background: transparent; }
+
+    .sans { font-family: "Inter", -apple-system, "PingFang SC", sans-serif; }
+    .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, monospace; }
+
+    h1, h2, h3, h4 {
+      font-family: "Newsreader", "Songti SC", Georgia, serif;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    /* ============================== TOP NAV ============================== */
+    .topnav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(244,239,231,0.86);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--rule);
+    }
+    .topnav-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 14px 40px;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .topnav-brand {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .topnav-brand b { color: var(--accent); }
+    .topnav-links {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-left: auto;
+    }
+    .topnav-link {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mute);
+      text-decoration: none;
+      padding: 8px 12px;
+      border: 1px solid transparent;
+      transition: all 140ms ease;
+    }
+    .topnav-link:hover {
+      color: var(--ink);
+      border-color: var(--rule);
+      background: var(--paper);
+    }
+    .topnav-link.active {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* ============================== LAYOUT ============================== */
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 40px;
+    }
+
+    section.section {
+      padding: 96px 0 64px;
+      scroll-margin-top: 70px;
+    }
+
+    .section-head {
+      max-width: 920px;
+      margin-bottom: 56px;
+    }
+
+    .eyebrow {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 32px;
+      height: 1px;
+      background: var(--accent);
+    }
+    .eyebrow.dim {
+      color: var(--mute);
+    }
+    .eyebrow.dim::before {
+      background: var(--mute);
+    }
+
+    .section-title {
+      font-size: clamp(34px, 4.4vw, 52px);
+      line-height: 1.1;
+      letter-spacing: -0.025em;
+      margin-bottom: 18px;
+    }
+    .section-title em {
+      color: var(--accent);
+      font-style: italic;
+    }
+
+    .section-lede {
+      max-width: 720px;
+      color: var(--soft);
+      font-size: 19px;
+      line-height: 1.6;
+      font-style: italic;
+    }
+
+    /* ============================== NEXT BAR ============================== */
+    .nextbar {
+      margin-top: 80px;
+      padding-top: 28px;
+      border-top: 1px solid var(--rule);
+      display: flex;
+      justify-content: flex-end;
+      align-items: baseline;
+      gap: 18px;
+    }
+    .nextbar .nextbar-hint {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+    .nextbar a {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: baseline;
+      gap: 14px;
+      padding: 14px 22px;
+      border: 1px solid var(--ink);
+      background: var(--paper);
+      color: var(--ink);
+      transition: all 160ms ease;
+    }
+    .nextbar a:hover {
+      background: var(--deep);
+      color: var(--cream);
+    }
+    .nextbar .nb-step {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .nextbar a:hover .nb-step {
+      color: var(--accent-soft);
+    }
+    .nextbar .nb-label {
+      font-family: "Newsreader", serif;
+      font-size: 19px;
+      font-style: italic;
+      letter-spacing: -0.005em;
+    }
+    .nextbar .nb-arrow {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 14px;
+    }
+
+    /* ============================== HERO ============================== */
+    #hero {
+      padding: 80px 0 56px;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: 64px;
+      align-items: center;
+    }
+    .hero-title {
+      font-size: clamp(40px, 5.2vw, 64px);
+      line-height: 1.06;
+      letter-spacing: -0.03em;
+      font-weight: 500;
+    }
+    .hero-title em {
+      color: var(--accent);
+      font-style: italic;
+    }
+    .hero-title .arrow {
+      color: var(--mute);
+      font-style: normal;
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 400;
+      font-size: 0.66em;
+      vertical-align: 0.18em;
+      margin: 0 0.14em;
+      letter-spacing: 0;
+    }
+    .hero-sub {
+      margin-top: 26px;
+      max-width: 660px;
+      color: var(--soft);
+      font-size: 20px;
+      line-height: 1.6;
+      font-style: italic;
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 28px;
+      margin-top: 36px;
+      padding-top: 24px;
+      border-top: 1px solid var(--rule);
+      color: var(--mute);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11.5px;
+      letter-spacing: 0.12em;
+    }
+    .hero-meta b {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    /* hero route stack */
+    .route-stack {
+      background: var(--card);
+      border: 1px solid var(--rule);
+      box-shadow: var(--shadow);
+      padding: 26px 24px;
+    }
+    .route-stack-head {
+      padding-bottom: 16px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--rule);
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .route-stack-head h4 {
+      font-size: 16px;
+      letter-spacing: -0.01em;
+    }
+    .route-stack-head span {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      color: var(--mute);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .route-rail {
+      display: grid;
+      gap: 14px;
+    }
+    .route-bar {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 14px;
+      align-items: stretch;
+      position: relative;
+    }
+    .route-tag {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--ink);
+      background: var(--deep);
+      color: var(--cream);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      min-height: 64px;
+    }
+    .route-body {
+      position: relative;
+      border: 1px solid var(--rule);
+      background: var(--paper);
+      padding: 12px 16px;
+    }
+    .route-body b {
+      display: block;
+      color: var(--accent);
+      font-family: "Newsreader", serif;
+      font-size: 20px;
+      line-height: 1.18;
+      margin-bottom: 3px;
+      font-weight: 500;
+    }
+    .route-body span {
+      display: block;
+      color: var(--soft);
+      font-family: "Inter", sans-serif;
+      font-size: 13px;
+      line-height: 1.46;
+    }
+    .route-bar:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      left: 46px;
+      bottom: -14px;
+      width: 1px;
+      height: 14px;
+      background: var(--accent);
+      z-index: 1;
+    }
+
+    /* ============================== MAP (panorama) ============================== */
+    .map-frame {
+      background: var(--card);
+      border: 1px solid var(--ink);
+      box-shadow: var(--shadow);
+    }
+    .map-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 22px 28px;
+      border-bottom: 1px solid var(--ink);
+      background: var(--paper);
+    }
+    .map-head h3 {
+      font-size: 22px;
+      letter-spacing: -0.01em;
+    }
+    .map-head span {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+
+    .panorama {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .pano-col {
+      padding: 28px 24px 28px;
+      border-right: 1px solid var(--ink);
+      display: flex;
+      flex-direction: column;
+      min-height: 460px;
+      position: relative;
+    }
+    .pano-col:last-child { border-right: 0; }
+    .pano-col.dark {
+      background: var(--deep);
+      color: var(--cream);
+    }
+    .pano-stage {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .pano-col.dark .pano-stage { color: var(--accent-soft); }
+    .pano-title {
+      font-size: 32px;
+      line-height: 1.08;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    .pano-col.dark .pano-title { color: var(--cream); }
+    .pano-sub {
+      font-family: "Inter", sans-serif;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+      color: var(--mute);
+      margin-bottom: 22px;
+    }
+    .pano-col.dark .pano-sub { color: rgba(240,230,214,0.65); }
+    .pano-line {
+      height: 1px;
+      background: var(--rule);
+      margin: 16px 0 18px;
+    }
+    .pano-col.dark .pano-line { background: rgba(240,230,214,0.18); }
+    .pano-block {
+      margin-bottom: 18px;
+    }
+    .pano-block:last-child { margin-bottom: 0; }
+    .pano-key {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 9.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--mute);
+      margin-bottom: 6px;
+    }
+    .pano-col.dark .pano-key { color: rgba(240,230,214,0.55); }
+    .pano-val {
+      font-family: "Newsreader", serif;
+      font-size: 17px;
+      line-height: 1.42;
+      color: var(--ink);
+    }
+    .pano-col.dark .pano-val { color: var(--cream); }
+    .pano-foot {
+      margin-top: auto;
+      padding-top: 18px;
+      border-top: 1px dashed var(--rule);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.06em;
+      color: var(--soft);
+      line-height: 1.5;
+    }
+    .pano-col.dark .pano-foot {
+      border-top-color: rgba(240,230,214,0.2);
+      color: rgba(240,230,214,0.7);
+    }
+
+    /* panorama bottom thread */
+    .pano-thread {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--ink);
+      background: var(--bg-warm);
+    }
+    .pano-th-cell {
+      padding: 14px 24px;
+      border-right: 1px solid var(--ink);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      color: var(--soft);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .pano-th-cell:last-child { border-right: 0; }
+    .pano-th-cell b {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .verdict {
+      margin-top: 32px;
+      padding: 22px 28px;
+      background: var(--deep);
+      color: var(--cream);
+      border: 1px solid var(--ink);
+      font-family: "Newsreader", serif;
+      font-size: 19px;
+      line-height: 1.55;
+      font-style: italic;
+      position: relative;
+    }
+    .verdict::before {
+      content: "“";
+      position: absolute;
+      left: 14px;
+      top: 6px;
+      font-family: "Newsreader", serif;
+      font-size: 42px;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .verdict-body { padding-left: 22px; }
+    .verdict b { color: var(--accent-soft); font-style: normal; font-weight: 600; }
+
+    /* ============================== PROMPT section ============================== */
+    .prompt-axis {
+      display: grid;
+      grid-template-columns: 1fr 84px 1fr;
+      gap: 0;
+      border: 1px solid var(--ink);
+      background: var(--card);
+    }
+    .axis-col {
+      padding: 32px 30px;
+      min-height: 380px;
+      display: flex;
+      flex-direction: column;
+    }
+    .axis-col.left {
+      border-right: 1px solid var(--ink);
+    }
+    .axis-col.right {
+      border-left: 1px solid var(--ink);
+    }
+    .axis-mid {
+      background: var(--deep);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 0;
+    }
+    .axis-mid-num {
+      color: var(--cream);
+      font-family: "Newsreader", serif;
+      font-size: 56px;
+      line-height: 1;
+      font-style: italic;
+    }
+    .axis-mid-num small {
+      font-size: 0.4em;
+      color: var(--accent-soft);
+      display: block;
+      margin-top: 8px;
+      font-family: "JetBrains Mono", monospace;
+      font-style: normal;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .axis-tag {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .axis-name {
+      font-size: 32px;
+      line-height: 1.1;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    .axis-name em {
+      color: var(--accent);
+      font-style: italic;
+    }
+    .axis-goal {
+      font-family: "Inter", sans-serif;
+      font-size: 13px;
+      color: var(--mute);
+      margin-bottom: 18px;
+      letter-spacing: 0.04em;
+    }
+    .axis-bullets {
+      list-style: none;
+      display: grid;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .axis-bullets li {
+      padding-left: 22px;
+      position: relative;
+      color: var(--soft);
+      font-family: "Inter", sans-serif;
+      font-size: 14.5px;
+      line-height: 1.55;
+    }
+    .axis-bullets li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 500;
+    }
+    .axis-fit {
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px dashed var(--rule);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.08em;
+      color: var(--soft);
+      line-height: 1.55;
+    }
+    .axis-fit b { color: var(--accent); font-weight: 600; }
+
+    /* signal chips */
+    .signal-row {
+      margin-top: 36px;
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 32px;
+      align-items: center;
+      padding: 24px 28px;
+      border: 1px solid var(--rule);
+      background: var(--paper);
+    }
+    .signal-row-label {
+      font-family: "Newsreader", serif;
+      font-size: 18px;
+      line-height: 1.35;
+      color: var(--ink);
+      font-style: italic;
+    }
+    .signal-row-label b { color: var(--accent); font-style: normal; font-weight: 600; }
+    .signal-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .signal-chip {
+      border: 1px solid var(--ink);
+      background: var(--bg-warm);
+      padding: 8px 14px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--ink);
+    }
+    .signal-arrow-block {
+      text-align: right;
+      color: var(--accent);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-top: 8px;
+    }
+
+    /* case cards */
+    .case-grid {
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1px solid var(--ink);
+    }
+    .case-card {
+      padding: 30px 28px;
+      background: var(--card);
+      border-right: 1px solid var(--ink);
+      display: flex;
+      flex-direction: column;
+    }
+    .case-card:last-child { border-right: 0; }
+    .case-card.featured {
+      background: var(--deep);
+      color: var(--cream);
+    }
+    .case-tag {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .case-tag .case-num {
+      width: 22px;
+      height: 22px;
+      border: 1px solid currentColor;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+    .case-card.featured .case-tag { color: var(--accent-soft); }
+    .case-card h4 {
+      font-size: 22px;
+      line-height: 1.25;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+    .case-card.featured h4 { color: var(--cream); }
+    .case-snippet {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: var(--ink);
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+    .case-card.featured .case-snippet {
+      background: rgba(240,230,214,0.06);
+      border-color: rgba(240,230,214,0.18);
+      color: var(--cream);
+    }
+    .case-note {
+      font-family: "Inter", sans-serif;
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--soft);
+    }
+    .case-card.featured .case-note { color: rgba(240,230,214,0.74); }
+    .case-note b { color: var(--accent); font-weight: 600; }
+    .case-card.featured .case-note b { color: var(--accent-soft); }
+    .case-foot {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--rule);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--mute);
+    }
+    .case-card.featured .case-foot {
+      border-top-color: rgba(240,230,214,0.2);
+      color: rgba(240,230,214,0.6);
+    }
+
+    /* tool cards */
+    .tool-grid {
+      margin-top: 36px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .tool-card {
+      background: var(--card);
+      border: 1px solid var(--rule);
+      box-shadow: var(--shadow-soft);
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .tool-icon {
+      width: 56px;
+      height: 56px;
+      border: 1px solid var(--ink);
+      background: var(--paper);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 22px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .tool-body h4 {
+      font-size: 19px;
+      margin-bottom: 4px;
+      letter-spacing: -0.005em;
+    }
+    .tool-body .tool-role {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--mute);
+      margin-bottom: 10px;
+    }
+    .tool-body p {
+      font-family: "Inter", sans-serif;
+      font-size: 13.5px;
+      color: var(--soft);
+      line-height: 1.55;
+      margin-bottom: 12px;
+    }
+    .tool-link {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid var(--accent);
+      padding-bottom: 1px;
+    }
+    .tool-link:hover {
+      color: var(--accent-deep);
+      border-bottom-color: var(--accent-deep);
+    }
+
+    /* ============================== SKILLS section ============================== */
+    .pd-figure {
+      background: var(--card);
+      border: 1px solid var(--ink);
+      box-shadow: var(--shadow);
+      padding: 36px 32px 28px;
+    }
+    .pd-row {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 28px;
+      padding: 22px 0;
+      border-bottom: 1px dashed var(--rule);
+      align-items: center;
+    }
+    .pd-row:last-child { border-bottom: 0; }
+    .pd-tier {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+    .pd-tier b {
+      display: block;
+      color: var(--ink);
+      font-family: "Newsreader", serif;
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      text-transform: none;
+      margin-top: 6px;
+    }
+    .pd-tier b em {
+      color: var(--accent);
+      font-style: italic;
+    }
+    .pd-content {
+      font-family: "Inter", sans-serif;
+      font-size: 14.5px;
+      color: var(--soft);
+      line-height: 1.6;
+      display: grid;
+      gap: 10px;
+    }
+    .pd-content code {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12.5px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      padding: 2px 6px;
+      color: var(--ink);
+    }
+    .pd-when {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+
+    /* atomic vs monolithic */
+    .vs-grid {
+      margin-top: 48px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1px solid var(--ink);
+    }
+    .vs-col {
+      padding: 30px 28px;
+      background: var(--card);
+      display: flex;
+      flex-direction: column;
+    }
+    .vs-col.left {
+      border-right: 1px solid var(--ink);
+      background: var(--bg-warm);
+    }
+    .vs-col.right { background: var(--paper); }
+    .vs-head {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--mute);
+      margin-bottom: 10px;
+    }
+    .vs-col.right .vs-head { color: var(--accent); }
+    .vs-name {
+      font-size: 24px;
+      letter-spacing: -0.01em;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+    .vs-name em { color: var(--accent); font-style: italic; }
+    .vs-chain {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      padding: 16px;
+      background: var(--card);
+      border: 1px dashed var(--rule);
+      margin-bottom: 18px;
+    }
+    .vs-block {
+      padding: 8px 12px;
+      border: 1px solid var(--ink);
+      background: var(--paper);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11.5px;
+      color: var(--ink);
+      letter-spacing: 0.04em;
+    }
+    .vs-col.left .vs-block {
+      background: rgba(192,74,26,0.06);
+      border-color: var(--rule);
+    }
+    .vs-col.right .vs-block {
+      background: var(--deep);
+      color: var(--cream);
+      border-color: var(--ink);
+    }
+    .vs-arrow {
+      color: var(--mute);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 13px;
+    }
+    .vs-pain {
+      font-family: "Inter", sans-serif;
+      font-size: 13.5px;
+      color: var(--soft);
+      line-height: 1.55;
+    }
+    .vs-pain b { color: var(--accent); font-weight: 600; }
+
+    /* claude code loop */
+    .cc-loop {
+      margin-top: 48px;
+      background: var(--deep);
+      color: var(--cream);
+      border: 1px solid var(--ink);
+      padding: 32px;
+    }
+    .cc-head {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(240,230,214,0.18);
+    }
+    .cc-head h3 {
+      color: var(--cream);
+      font-size: 26px;
+      letter-spacing: -0.015em;
+    }
+    .cc-head span {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent-soft);
+      margin-left: auto;
+    }
+    .cc-cycle {
+      display: grid;
+      grid-template-columns: 1fr 36px 1fr 36px 1fr;
+      align-items: stretch;
+      gap: 0;
+    }
+    .cc-node {
+      border: 1px solid rgba(240,230,214,0.3);
+      padding: 18px 16px;
+      background: rgba(240,230,214,0.04);
+    }
+    .cc-node h5 {
+      color: var(--accent-soft);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .cc-node p {
+      font-family: "Newsreader", serif;
+      font-size: 16px;
+      line-height: 1.35;
+      color: var(--cream);
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+    .cc-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .cc-tools span {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.04em;
+      padding: 3px 8px;
+      border: 1px solid rgba(240,230,214,0.28);
+      background: rgba(240,230,214,0.08);
+    }
+    .cc-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 18px;
+    }
+    .cc-foot {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(240,230,214,0.18);
+      font-family: "Newsreader", serif;
+      font-size: 17px;
+      line-height: 1.5;
+      color: rgba(240,230,214,0.78);
+      font-style: italic;
+    }
+    .cc-foot b { color: var(--accent-soft); font-style: normal; font-weight: 600; }
+
+    /* bash story sidebar */
+    .bash-aside {
+      margin-top: 48px;
+      display: grid;
+      grid-template-columns: 0.55fr 1fr;
+      gap: 0;
+      border: 1px solid var(--ink);
+    }
+    .bash-lead {
+      padding: 30px;
+      background: var(--paper);
+      border-right: 1px solid var(--ink);
+    }
+    .bash-lead h4 {
+      font-size: 22px;
+      line-height: 1.25;
+      margin-bottom: 14px;
+      letter-spacing: -0.01em;
+    }
+    .bash-lead p {
+      font-family: "Inter", sans-serif;
+      font-size: 13.5px;
+      color: var(--soft);
+      line-height: 1.6;
+    }
+    .bash-trail {
+      padding: 30px;
+      background: var(--card);
+    }
+    .bash-line {
+      padding: 12px 0;
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 16px;
+      border-bottom: 1px dashed var(--rule);
+      align-items: baseline;
+    }
+    .bash-line:last-child { border-bottom: 0; }
+    .bash-cmd {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 15px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .bash-cmd small {
+      display: block;
+      color: var(--mute);
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      margin-top: 4px;
+    }
+    .bash-mean {
+      font-family: "Inter", sans-serif;
+      font-size: 13.5px;
+      color: var(--soft);
+      line-height: 1.55;
+    }
+    .bash-mean b { color: var(--ink); font-weight: 600; }
+
+    /* ============================== HARNESS section (重头戏) ============================== */
+    .harness-arch {
+      background: var(--card);
+      border: 1px solid var(--ink);
+      box-shadow: var(--shadow);
+    }
+    .harness-head {
+      padding: 22px 28px;
+      background: var(--paper);
+      border-bottom: 1px solid var(--ink);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .harness-head h3 {
+      font-size: 22px;
+      letter-spacing: -0.01em;
+    }
+    .harness-head span {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+    .harness-body {
+      padding: 36px 32px 32px;
+    }
+
+    /* orchestrator row */
+    .hb-orchestrator {
+      background: var(--deep);
+      color: var(--cream);
+      padding: 22px 24px;
+      border: 1px solid var(--ink);
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 24px;
+      align-items: center;
+    }
+    .hb-role-tag {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent-soft);
+      padding: 8px 14px;
+      border: 1px solid var(--accent-soft);
+    }
+    .hb-role-name {
+      font-size: 24px;
+      letter-spacing: -0.01em;
+      color: var(--cream);
+      font-weight: 500;
+    }
+    .hb-role-name small {
+      display: block;
+      font-family: "Inter", sans-serif;
+      font-size: 13px;
+      color: rgba(240,230,214,0.7);
+      font-weight: 400;
+      margin-top: 4px;
+      letter-spacing: 0.02em;
+    }
+    .hb-role-duty {
+      font-family: "Inter", sans-serif;
+      font-size: 13px;
+      color: rgba(240,230,214,0.78);
+      line-height: 1.55;
+      max-width: 360px;
+      text-align: right;
+    }
+
+    /* arrows down to workers */
+    .hb-fan {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      height: 36px;
+      position: relative;
+    }
+    .hb-fan-line {
+      border-right: 1px solid var(--accent);
+      position: relative;
+    }
+    .hb-fan-line::after {
+      content: "▼";
+      position: absolute;
+      bottom: -4px;
+      right: -6px;
+      color: var(--accent);
+      font-size: 9px;
+    }
+    .hb-fan-line:last-child { border-right: 0; }
+    .hb-fan-line.solo {
+      border-right: 0;
+    }
+    .hb-fan-line.solo::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 1px;
+      height: 100%;
+      background: var(--accent);
+    }
+    .hb-fan-line.solo::after {
+      left: calc(50% - 4px);
+      right: auto;
+    }
+
+    /* workers row - the star */
+    .hb-workers {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .hb-worker {
+      background: var(--card);
+      border: 1px solid var(--ink);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+    }
+    .hb-worker::before {
+      content: "";
+      position: absolute;
+      top: -4px;
+      left: 50%;
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      transform: translateX(-50%) rotate(45deg);
+    }
+    .hb-worker-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .hb-worker-id {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .hb-worker-pid {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      color: var(--mute);
+      letter-spacing: 0.04em;
+    }
+    .hb-worker-task {
+      font-family: "Newsreader", serif;
+      font-size: 18px;
+      line-height: 1.3;
+      color: var(--ink);
+      font-weight: 500;
+    }
+    .hb-worker-ctx {
+      font-family: "Inter", sans-serif;
+      font-size: 12.5px;
+      color: var(--soft);
+      line-height: 1.5;
+      padding: 10px 12px;
+      background: var(--paper);
+      border: 1px dashed var(--rule);
+    }
+    .hb-worker-ctx b { color: var(--accent); font-weight: 600; }
+    .hb-worker-out {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--ink);
+      padding-top: 10px;
+      border-top: 1px solid var(--rule);
+      display: flex;
+      justify-content: space-between;
+    }
+    .hb-worker-out span:last-child { color: var(--accent); }
+
+    /* handoff handoff handoff */
+    .hb-handoff-row {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .hb-handoff {
+      padding: 12px;
+      background: var(--bg-warm);
+      border: 1px solid var(--rule);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--soft);
+      text-align: center;
+    }
+    .hb-handoff b {
+      color: var(--accent);
+      display: block;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    /* converge to validator */
+    .hb-converge {
+      margin-top: 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      height: 32px;
+    }
+    .hb-conv-line {
+      border-right: 1px solid var(--accent);
+    }
+    .hb-conv-line:last-child { border-right: 0; }
+
+    .hb-validator {
+      margin-top: 0;
+      background: var(--deep);
+      color: var(--cream);
+      padding: 22px 24px;
+      border: 1px solid var(--ink);
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 24px;
+      align-items: center;
+    }
+    .hb-validator .hb-role-tag {
+      color: var(--good);
+      border-color: var(--good);
+    }
+
+    .hb-decision {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .hb-dec {
+      padding: 16px 20px;
+      border: 1px solid var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .hb-dec.pass {
+      background: var(--paper);
+    }
+    .hb-dec.fail {
+      background: var(--bg-warm);
+    }
+    .hb-dec-flag {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 6px 10px;
+      border: 1px solid var(--ink);
+      background: var(--card);
+    }
+    .hb-dec.pass .hb-dec-flag { color: var(--good); border-color: var(--good); }
+    .hb-dec.fail .hb-dec-flag { color: var(--accent); border-color: var(--accent); }
+    .hb-dec-action {
+      font-family: "Newsreader", serif;
+      font-size: 16px;
+      line-height: 1.45;
+      color: var(--ink);
+    }
+
+    /* practice cards */
+    .practice-grid {
+      margin-top: 48px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1px solid var(--ink);
+    }
+    .practice-card {
+      padding: 32px 28px;
+      background: var(--card);
+      border-right: 1px solid var(--ink);
+      display: flex;
+      flex-direction: column;
+    }
+    .practice-card:last-child { border-right: 0; }
+    .practice-tag {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .practice-card h4 {
+      font-size: 26px;
+      line-height: 1.18;
+      letter-spacing: -0.015em;
+      margin-bottom: 14px;
+    }
+    .practice-stats {
+      display: flex;
+      gap: 18px;
+      margin-bottom: 18px;
+      padding: 14px 16px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+    }
+    .practice-stats div {
+      flex: 1;
+    }
+    .practice-stats span {
+      display: block;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--mute);
+      margin-bottom: 4px;
+    }
+    .practice-stats b {
+      font-family: "Newsreader", serif;
+      font-size: 24px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .practice-card p {
+      font-family: "Inter", sans-serif;
+      font-size: 14px;
+      color: var(--soft);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .practice-foot {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px dashed var(--rule);
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .practice-foot a {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid var(--accent);
+      padding-bottom: 1px;
+    }
+    .practice-foot a:hover { color: var(--accent-deep); border-bottom-color: var(--accent-deep); }
+
+    /* honest note */
+    .honest-note {
+      margin-top: 32px;
+      padding: 18px 24px;
+      border: 1px dashed var(--mute);
+      background: transparent;
+      font-family: "Inter", sans-serif;
+      font-size: 13.5px;
+      color: var(--soft);
+      line-height: 1.6;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .honest-note-tag {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--mute);
+      padding: 4px 10px;
+      border: 1px solid var(--mute);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .honest-note b { color: var(--ink); }
+    .honest-note a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid var(--accent);
+    }
+
+    /* ============================== FOUNDER OS section ============================== */
+    .stage-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border: 1px solid var(--ink);
+      background: var(--card);
+    }
+    .stage-cell {
+      padding: 30px 24px 26px;
+      border-right: 1px solid var(--ink);
+      display: flex;
+      flex-direction: column;
+      min-height: 320px;
+      position: relative;
+    }
+    .stage-cell:last-child { border-right: 0; }
+    .stage-num {
+      font-family: "Newsreader", serif;
+      font-style: italic;
+      font-size: 48px;
+      line-height: 1;
+      color: var(--accent);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .stage-name {
+      font-size: 22px;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+    .stage-role {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--mute);
+      margin-bottom: 16px;
+    }
+    .stage-list {
+      list-style: none;
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .stage-list li {
+      padding-left: 18px;
+      position: relative;
+      color: var(--soft);
+      font-family: "Inter", sans-serif;
+      font-size: 13.5px;
+      line-height: 1.5;
+    }
+    .stage-list li::before {
+      content: "·";
+      position: absolute;
+      left: 6px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .stage-q {
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px dashed var(--rule);
+      font-family: "Newsreader", serif;
+      font-style: italic;
+      font-size: 14px;
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    .stage-q b { color: var(--accent); font-style: normal; }
+
+    .stage-loop {
+      margin-top: 24px;
+      padding: 14px 24px;
+      border: 1px solid var(--ink);
+      background: var(--deep);
+      color: var(--cream);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .stage-loop b { color: var(--accent-soft); }
+    .stage-loop-arrow {
+      flex: 1;
+      margin: 0 18px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent-soft), transparent);
+    }
+
+    /* role shift */
+    .role-shift {
+      margin-top: 56px;
+      background: var(--card);
+      border: 1px solid var(--ink);
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: 1fr 120px 1fr;
+      align-items: stretch;
+    }
+    .role-side {
+      padding: 32px 30px;
+    }
+    .role-side.before {
+      background: var(--bg-warm);
+      border-right: 1px solid var(--ink);
+    }
+    .role-side.after {
+      background: var(--paper);
+      border-left: 1px solid var(--ink);
+    }
+    .role-mid {
+      background: var(--deep);
+      color: var(--cream);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    .role-mid b {
+      color: var(--accent-soft);
+      font-size: 22px;
+      letter-spacing: 0;
+      text-transform: none;
+      font-family: "Newsreader", serif;
+      font-weight: 500;
+    }
+    .role-tag {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--mute);
+      margin-bottom: 10px;
+    }
+    .role-side h4 {
+      font-size: 26px;
+      line-height: 1.15;
+      letter-spacing: -0.015em;
+      margin-bottom: 14px;
+    }
+    .role-side h4 em { color: var(--accent); font-style: italic; }
+    .role-side p {
+      font-family: "Inter", sans-serif;
+      font-size: 14px;
+      color: var(--soft);
+      line-height: 1.6;
+    }
+
+    /* chatgpt vs codex */
+    .split-grid {
+      margin-top: 48px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1px solid var(--ink);
+    }
+    .split-col {
+      padding: 30px 28px;
+      background: var(--card);
+      border-right: 1px solid var(--ink);
+      display: flex;
+      flex-direction: column;
+    }
+    .split-col:last-child { border-right: 0; background: var(--paper); }
+    .split-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding-bottom: 14px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--rule);
+    }
+    .split-head h4 {
+      font-size: 22px;
+      letter-spacing: -0.01em;
+    }
+    .split-head span {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .split-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .split-list li {
+      padding: 10px 12px;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px;
+      color: var(--ink);
+      letter-spacing: 0.04em;
+    }
+    .split-col:last-child .split-list li {
+      background: var(--card);
+    }
+    .split-foot {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--rule);
+      font-family: "Inter", sans-serif;
+      font-size: 13px;
+      color: var(--soft);
+      line-height: 1.55;
+    }
+
+    /* ============================== CLOSING ============================== */
+    #closing {
+      padding-top: 96px;
+    }
+    .closing-quote {
+      background: var(--deep);
+      color: var(--cream);
+      padding: 64px 56px;
+      border: 1px solid var(--ink);
+      position: relative;
+      overflow: hidden;
+    }
+    .closing-quote::before {
+      content: "”";
+      position: absolute;
+      right: 36px;
+      top: -40px;
+      font-family: "Newsreader", serif;
+      font-size: 280px;
+      color: rgba(192,74,26,0.18);
+      line-height: 1;
+    }
+    .closing-quote-eyebrow {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent-soft);
+      margin-bottom: 24px;
+    }
+    .closing-quote h2 {
+      color: var(--cream);
+      font-size: clamp(32px, 4.4vw, 52px);
+      line-height: 1.18;
+      letter-spacing: -0.025em;
+      max-width: 900px;
+      margin-bottom: 36px;
+      font-weight: 500;
+    }
+    .closing-quote h2 em {
+      color: var(--accent-soft);
+      font-style: italic;
+    }
+    .closing-quote .final-line {
+      max-width: 860px;
+      font-family: "Newsreader", serif;
+      font-size: 21px;
+      line-height: 1.55;
+      color: rgba(240,230,214,0.82);
+      font-style: italic;
+      padding-top: 30px;
+      border-top: 1px solid rgba(240,230,214,0.18);
+    }
+    .closing-quote .final-line b {
+      color: var(--accent-soft);
+      font-style: normal;
+      font-weight: 600;
+    }
+
+    .closing-checks {
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border: 1px solid var(--ink);
+    }
+    .closing-check {
+      padding: 24px 22px;
+      background: var(--card);
+      border-right: 1px solid var(--ink);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .closing-check:last-child { border-right: 0; }
+    .closing-check .cc-q {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .closing-check p {
+      font-family: "Newsreader", serif;
+      font-size: 16.5px;
+      line-height: 1.4;
+      color: var(--ink);
+    }
+
+    /* ============================== RESOURCES section ============================== */
+    .res-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border: 1px solid var(--ink);
+      background: var(--card);
+    }
+    .res-col {
+      padding: 26px 22px 24px;
+      border-right: 1px solid var(--ink);
+    }
+    .res-col:last-child { border-right: 0; }
+    .res-col-head {
+      padding-bottom: 14px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--ink);
+    }
+    .res-col-num {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .res-col-name {
+      font-size: 22px;
+      letter-spacing: -0.01em;
+    }
+    .res-list {
+      list-style: none;
+      display: grid;
+      gap: 4px;
+    }
+    .res-list li {
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--rule);
+    }
+    .res-list li:last-child { border-bottom: 0; }
+    .res-list a {
+      text-decoration: none;
+      color: var(--ink);
+      display: block;
+      transition: color 140ms ease;
+    }
+    .res-list a:hover { color: var(--accent); }
+    .res-kind {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--mute);
+      display: block;
+      margin-bottom: 2px;
+    }
+    .res-list a:hover .res-kind { color: var(--accent); }
+    .res-title {
+      font-family: "Inter", sans-serif;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    /* ============================== FOOTER ============================== */
+    footer {
+      margin-top: 96px;
+      padding: 32px 40px;
+      border-top: 1px solid var(--rule);
+      max-width: 1320px;
+      margin-left: auto;
+      margin-right: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 20px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+    footer b { color: var(--ink); }
+    footer .accent { color: var(--accent); }
+
+    /* ============================== MERMAID FRAME ============================== */
+    .mm-frame {
+      margin-top: 36px;
+      background: var(--card);
+      border: 1px solid var(--ink);
+      box-shadow: var(--shadow-soft);
+    }
+    .mm-head {
+      padding: 18px 26px;
+      background: var(--paper);
+      border-bottom: 1px solid var(--ink);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .mm-head h4 {
+      font-size: 18px;
+      letter-spacing: -0.01em;
+      font-weight: 500;
+    }
+    .mm-head span {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+    .mm-body {
+      padding: 36px 28px;
+      display: block;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    .mm-body .mermaid {
+      width: 100%;
+      font-family: "JetBrains Mono", monospace !important;
+      text-align: center;
+    }
+    .mm-body .mermaid svg {
+      width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+      max-height: 540px;
+      display: block;
+      margin: 0 auto;
+    }
+    /* nudge mermaid styling */
+    .mm-body .mermaid .nodeLabel,
+    .mm-body .mermaid .edgeLabel {
+      font-family: "JetBrains Mono", "Inter", monospace !important;
+      font-size: 14px !important;
+    }
+    .mm-body .mermaid .edgePath .path {
+      stroke-width: 1.6px !important;
+    }
+    .mm-body .mermaid .marker {
+      fill: var(--accent) !important;
+    }
+    .mm-body .mermaid .node rect {
+      stroke-width: 1.2px !important;
+    }
+
+    /* ============================== HARNESS FLOWCHART (manual SVG) ============================== */
+    .hf-frame {
+      background: var(--card);
+      border: 1px solid var(--ink);
+      box-shadow: var(--shadow);
+    }
+    .hf-head {
+      padding: 22px 28px;
+      background: var(--paper);
+      border-bottom: 1px solid var(--ink);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .hf-head h3 {
+      font-size: 22px;
+      letter-spacing: -0.01em;
+    }
+    .hf-head span {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+    .hf-canvas {
+      position: relative;
+      padding: 40px 28px 36px;
+    }
+    .hf-svg {
+      position: absolute;
+      inset: 40px 28px 36px;
+      pointer-events: none;
+      width: calc(100% - 56px);
+      height: calc(100% - 76px);
+      z-index: 1;
+    }
+    .hf-row {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      gap: 14px;
+    }
+    .hf-row.r-3 { grid-template-columns: repeat(3, 1fr); }
+    /* connection-line system (CSS folds) */
+    .hf-link-fanout {
+      display: grid;
+      grid-template-rows: 18px 1.5px 28px;
+      align-items: stretch;
+      margin: 4px 0 0;
+    }
+    .hf-link-fanout .trunk,
+    .hf-link-fanin .trunk,
+    .hf-link-single,
+    .hf-link-split .trunk {
+      width: 1.5px;
+      background: var(--accent);
+      justify-self: center;
+      position: relative;
+    }
+    .hf-link-fanout .cross,
+    .hf-link-fanin .cross,
+    .hf-link-split .cross {
+      background: var(--accent);
+      height: 1.5px;
+      margin: 0 16.67%;
+    }
+    .hf-link-split .cross { margin: 0 25%; }
+    .hf-link-fanout .leaves,
+    .hf-link-fanin .leaves {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .hf-link-fanout .leaves > span,
+    .hf-link-fanin .leaves > span,
+    .hf-link-split .leaves > span {
+      width: 1.5px;
+      background: var(--accent);
+      justify-self: center;
+      position: relative;
+    }
+    .hf-link-fanout .leaves > span::after,
+    .hf-link-parallel > span::after,
+    .hf-link-single::after,
+    .hf-link-fanin .trunk::after,
+    .hf-link-split .leaves > span::after {
+      content: "";
+      position: absolute;
+      bottom: -2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border: 5px solid transparent;
+      border-top: 8px solid var(--accent);
+    }
+
+    .hf-link-parallel {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      height: 30px;
+      margin: 2px 0;
+    }
+    .hf-link-parallel > span {
+      width: 1.5px;
+      background: var(--accent);
+      justify-self: center;
+      position: relative;
+    }
+
+    .hf-link-fanin {
+      display: grid;
+      grid-template-rows: 30px 1.5px 18px;
+      align-items: stretch;
+      margin: 0 0 4px;
+    }
+
+    .hf-link-single {
+      height: 36px;
+      margin: 4px auto;
+    }
+
+    .hf-link-split {
+      display: grid;
+      grid-template-rows: 16px 1.5px 1fr;
+      align-items: stretch;
+      margin: 4px 0 6px;
+    }
+    .hf-link-split .leaves {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .hf-link-split .leaf-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 6px;
+    }
+    .hf-link-split .leaf-label {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--card);
+      background: var(--accent);
+      padding: 3px 12px;
+      white-space: nowrap;
+      margin-bottom: 6px;
+    }
+    .hf-link-split .leaf-label.no { background: var(--ink); }
+    .hf-link-split .leaf-line {
+      width: 1.5px;
+      height: 26px;
+      background: var(--accent);
+      position: relative;
+    }
+    .hf-link-split .leaf-line::after {
+      content: "";
+      position: absolute;
+      bottom: -2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border: 5px solid transparent;
+      border-top: 8px solid var(--accent);
+    }
+
+    /* center single node */
+    .hf-center { display: flex; justify-content: center; }
+    .hf-orch {
+      width: 480px;
+      max-width: 100%;
+      padding: 22px 26px;
+      background: var(--deep);
+      color: var(--cream);
+      border: 1px solid var(--ink);
+      position: relative;
+    }
+    .hf-node-tag {
+      display: inline-block;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent-soft);
+      padding: 5px 12px;
+      border: 1px solid var(--accent-soft);
+      margin-bottom: 14px;
+    }
+    .hf-node-name {
+      font-family: "Newsreader", serif;
+      font-size: 24px;
+      letter-spacing: -0.01em;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--cream);
+    }
+    .hf-node-name em { color: var(--accent-soft); font-style: italic; }
+    .hf-node-duty {
+      font-family: "Inter", sans-serif;
+      font-size: 13px;
+      color: rgba(240,230,214,0.78);
+      line-height: 1.5;
+    }
+    .hf-node-duty b { color: var(--accent-soft); font-weight: 600; }
+
+    .hf-worker {
+      background: var(--card);
+      border: 1px solid var(--ink);
+      padding: 18px 18px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .hf-worker-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .hf-worker-id {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .hf-worker-pid {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      color: var(--mute);
+      letter-spacing: 0.04em;
+    }
+    .hf-worker-task {
+      font-family: "Newsreader", serif;
+      font-size: 17px;
+      line-height: 1.3;
+      color: var(--ink);
+      font-weight: 500;
+    }
+    .hf-worker-ctx {
+      font-family: "Inter", sans-serif;
+      font-size: 12px;
+      color: var(--soft);
+      line-height: 1.45;
+      padding: 8px 10px;
+      background: var(--paper);
+      border: 1px dashed var(--rule);
+    }
+    .hf-worker-ctx b { color: var(--accent); font-weight: 600; }
+
+    .hf-handoff {
+      padding: 14px 14px;
+      background: var(--bg-warm);
+      border: 1px solid var(--ink);
+      text-align: center;
+    }
+    .hf-handoff b {
+      display: block;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+    .hf-handoff span {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      color: var(--soft);
+      letter-spacing: 0.04em;
+    }
+
+    .hf-validator {
+      width: 480px;
+      max-width: 100%;
+      padding: 22px 26px;
+      background: var(--deep);
+      color: var(--cream);
+      border: 1px solid var(--ink);
+    }
+    .hf-validator .hf-node-tag {
+      color: var(--good);
+      border-color: var(--good);
+    }
+
+    /* diamond decision */
+    .hf-diamond-wrap {
+      display: flex;
+      justify-content: center;
+      padding: 14px 0;
+    }
+    .hf-diamond {
+      width: 150px;
+      height: 150px;
+      background: var(--card);
+      border: 1px solid var(--ink);
+      transform: rotate(45deg);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hf-diamond-inner {
+      transform: rotate(-45deg);
+      font-family: "Newsreader", serif;
+      font-size: 22px;
+      letter-spacing: -0.01em;
+      color: var(--accent);
+      font-weight: 500;
+      text-align: center;
+    }
+    .hf-diamond-inner small {
+      display: block;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 9.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--mute);
+      margin-top: 4px;
+      font-weight: 400;
+    }
+
+    /* yes/no branch */
+    .hf-branches {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .hf-branch {
+      padding: 18px 22px;
+      border: 1px solid var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .hf-branch.yes { background: var(--paper); }
+    .hf-branch.no { background: var(--bg-warm); }
+    .hf-branch-flag {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      border: 1px solid var(--ink);
+      background: var(--card);
+      flex-shrink: 0;
+    }
+    .hf-branch.yes .hf-branch-flag { color: var(--good); border-color: var(--good); }
+    .hf-branch.no .hf-branch-flag { color: var(--accent); border-color: var(--accent); }
+    .hf-branch-action {
+      font-family: "Newsreader", serif;
+      font-size: 16px;
+      line-height: 1.4;
+      color: var(--ink);
+    }
+
+    /* responsive guard rails */
+    @media (max-width: 1100px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 48px; }
+      .panorama { grid-template-columns: repeat(2, 1fr); }
+      .pano-col:nth-child(2) { border-right: 0; }
+      .pano-col { border-bottom: 1px solid var(--ink); }
+      .pano-thread { grid-template-columns: repeat(2, 1fr); }
+      .pano-th-cell:nth-child(2) { border-right: 0; }
+      .pano-th-cell { border-bottom: 1px solid var(--ink); }
+      .stage-grid { grid-template-columns: repeat(2, 1fr); }
+      .stage-cell:nth-child(2) { border-right: 0; }
+      .stage-cell { border-bottom: 1px solid var(--ink); }
+      .closing-checks { grid-template-columns: repeat(2, 1fr); }
+      .closing-check:nth-child(2) { border-right: 0; }
+      .closing-check { border-bottom: 1px solid var(--ink); }
+      .res-grid { grid-template-columns: repeat(2, 1fr); }
+      .res-col:nth-child(2) { border-right: 0; }
+      .res-col { border-bottom: 1px solid var(--ink); }
+      .role-shift { grid-template-columns: 1fr; }
+      .role-side.before { border-right: 0; border-bottom: 1px solid var(--ink); }
+      .role-side.after { border-left: 0; border-top: 1px solid var(--ink); }
+      .role-mid { padding: 14px; }
+    }
+    @media (max-width: 980px) {
+      .hf-row.r-3 { grid-template-columns: 1fr; }
+      .hf-svg { display: none; }
+      .hf-orch, .hf-validator { width: 100%; }
+      .hf-branches { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 720px) {
+      .container { padding: 0 22px; }
+      .topnav-inner { padding: 12px 22px; }
+      .topnav-links { display: none; }
+      .hero-title { font-size: 44px; }
+      .prompt-axis { grid-template-columns: 1fr; }
+      .axis-mid { padding: 18px 0; }
+      .axis-col.left, .axis-col.right { border: 0; border-bottom: 1px solid var(--ink); }
+      .case-grid, .vs-grid, .practice-grid, .split-grid { grid-template-columns: 1fr; }
+      .case-card, .vs-col, .practice-card, .split-col { border-right: 0; border-bottom: 1px solid var(--ink); }
+      .tool-grid { grid-template-columns: 1fr; }
+      .cc-cycle { grid-template-columns: 1fr; }
+      .cc-arrow { transform: rotate(90deg); padding: 10px 0; }
+      .hb-orchestrator, .hb-validator { grid-template-columns: 1fr; text-align: left; }
+      .hb-role-duty { text-align: left; max-width: 100%; }
+      .hb-workers, .hb-handoff-row { grid-template-columns: 1fr; }
+      .signal-row { grid-template-columns: 1fr; gap: 12px; }
+      .pano-col, .panorama { grid-template-columns: 1fr; }
+      .pano-col { border-right: 0; border-bottom: 1px solid var(--ink); }
+      .stage-grid { grid-template-columns: 1fr; }
+      .closing-checks, .res-grid { grid-template-columns: 1fr; }
+      .closing-check, .res-col { border-right: 0; border-bottom: 1px solid var(--ink); }
+      .bash-aside { grid-template-columns: 1fr; }
+      .bash-lead { border-right: 0; border-bottom: 1px solid var(--ink); }
+      .bash-line { grid-template-columns: 1fr; gap: 4px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topnav" id="topnav">
+  <div class="topnav-inner">
+    <div class="topnav-brand">画伞 · <b>姜胡说分享</b> · 2026</div>
+    <div class="topnav-links">
+      <a class="topnav-link" href="#hero" data-target="hero">00 总览</a>
+      <a class="topnav-link" href="#map" data-target="map">01 地图</a>
+      <a class="topnav-link" href="#prompt" data-target="prompt">02 Prompt</a>
+      <a class="topnav-link" href="#skills" data-target="skills">03 Skills</a>
+      <a class="topnav-link" href="#harness" data-target="harness">04 Harness</a>
+      <a class="topnav-link" href="#founder" data-target="founder">05 Founder OS</a>
+      <a class="topnav-link" href="#closing" data-target="closing">06 收束</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================== HERO ============================== -->
+<section class="section" id="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow">姜胡说社群分享 · 2026 · 画伞</div>
+        <h1 class="hero-title">
+          <em>Prompt</em><span class="arrow">→</span><em>Skills</em><span class="arrow">→</span><em>Harness</em><span class="arrow">→</span><em>OPC</em>
+        </h1>
+        <p class="hero-sub">
+          我的 AI 实践与思考——一条普通人学习 AI 的技术路线，<br>如何一步步长成自己的 AI-native Founder OS。
+        </p>
+      </div>
+      <aside class="route-stack">
+        <div class="route-stack-head">
+          <h4>路线一览</h4>
+          <span>四节 / 一图</span>
+        </div>
+        <div class="route-rail">
+          <div class="route-bar">
+            <div class="route-tag">01 Prompt</div>
+            <div class="route-body">
+              <b>训练提问</b>
+              <span>把问题定义、上下文、输出标准训成基础能力</span>
+            </div>
+          </div>
+          <div class="route-bar">
+            <div class="route-tag">02 Skills</div>
+            <div class="route-body">
+              <b>沉淀经验</b>
+              <span>把反复有效的流程封装成可复用能力包</span>
+            </div>
+          </div>
+          <div class="route-bar">
+            <div class="route-tag">03 Harness</div>
+            <div class="route-body">
+              <b>编排系统</b>
+              <span>让多个 agent 接力、稳定完成长任务</span>
+            </div>
+          </div>
+          <div class="route-bar">
+            <div class="route-tag">04 OPC</div>
+            <div class="route-body">
+              <b>服务创业</b>
+              <span>把技术能力放进 Idea / MVP / Launch / Scale</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="nextbar">
+      <span class="nextbar-hint">向下浏览</span>
+      <a href="#map">
+        <span class="nb-step">Next · 01</span>
+        <span class="nb-label">从技术路线到创业操作系统</span>
+        <span class="nb-arrow">↓</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 01 · MAP ============================== -->
+<section class="section" id="map">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">01 · 全景地图</div>
+      <h2 class="section-title">四层能力不是并列概念，而是<em>递进关系</em>。</h2>
+      <p class="section-lede">
+        Prompt 解决一次对话的质量。Skills 解决一类任务的复用。Harness 解决一个系统的稳定运行。Founder OS 把它们放进真实创业流程。
+      </p>
+    </div>
+
+    <div class="map-frame">
+      <div class="map-head">
+        <h3>能力地图 · 从对话质量到创业闭环</h3>
+        <span>Stage Map · 四节承接</span>
+      </div>
+
+      <div class="panorama">
+        <div class="pano-col">
+          <div class="pano-stage">Stage 01</div>
+          <div class="pano-title">Prompt</div>
+          <div class="pano-sub">表达 / 提问 / 上下文组织</div>
+          <div class="pano-line"></div>
+          <div class="pano-block">
+            <div class="pano-key">解决什么</div>
+            <div class="pano-val">让 LLM 进入更高质量的生成空间</div>
+          </div>
+          <div class="pano-block">
+            <div class="pano-key">单位</div>
+            <div class="pano-val">一次对话</div>
+          </div>
+          <div class="pano-foot">输入信号塑造输出空间</div>
+        </div>
+
+        <div class="pano-col">
+          <div class="pano-stage">Stage 02</div>
+          <div class="pano-title">Skills</div>
+          <div class="pano-sub">流程 / 资产 / 复用</div>
+          <div class="pano-line"></div>
+          <div class="pano-block">
+            <div class="pano-key">解决什么</div>
+            <div class="pano-val">把反复有效的经验封装成可复用能力</div>
+          </div>
+          <div class="pano-block">
+            <div class="pano-key">单位</div>
+            <div class="pano-val">一类任务</div>
+          </div>
+          <div class="pano-foot">progressive disclosure · 原子化</div>
+        </div>
+
+        <div class="pano-col">
+          <div class="pano-stage">Stage 03</div>
+          <div class="pano-title">Harness</div>
+          <div class="pano-sub">系统 / 编排 / 验证</div>
+          <div class="pano-line"></div>
+          <div class="pano-block">
+            <div class="pano-key">解决什么</div>
+            <div class="pano-val">让多个 agent 稳定完成长期复杂任务</div>
+          </div>
+          <div class="pano-block">
+            <div class="pano-key">单位</div>
+            <div class="pano-val">一个系统</div>
+          </div>
+          <div class="pano-foot">Orchestrator / Workers / Validator</div>
+        </div>
+
+        <div class="pano-col dark">
+          <div class="pano-stage">Stage 04</div>
+          <div class="pano-title">OPC · Founder OS</div>
+          <div class="pano-sub">判断 / 取舍 / 创业闭环</div>
+          <div class="pano-line"></div>
+          <div class="pano-block">
+            <div class="pano-key">解决什么</div>
+            <div class="pano-val">把 AI 能力放进 Idea→MVP→Launch→Scale</div>
+          </div>
+          <div class="pano-block">
+            <div class="pano-key">单位</div>
+            <div class="pano-val">一段创业</div>
+          </div>
+          <div class="pano-foot">AI 最终训练的是人的判断力</div>
+        </div>
+      </div>
+
+      <div class="pano-thread">
+        <div class="pano-th-cell"><b>训练</b> · 表达</div>
+        <div class="pano-th-cell"><b>训练</b> · 流程</div>
+        <div class="pano-th-cell"><b>训练</b> · 系统</div>
+        <div class="pano-th-cell"><b>训练</b> · 判断</div>
+      </div>
+    </div>
+
+    <div class="verdict">
+      <div class="verdict-body">
+        prompt 训练表达，skills 训练流程，harness 训练系统。<br>
+        <b>Founder OS 训练判断</b>——什么值得做，什么时候做，做到什么程度。
+      </div>
+    </div>
+
+    <div class="nextbar">
+      <span class="nextbar-hint">下一节</span>
+      <a href="#prompt">
+        <span class="nb-step">Next · 02</span>
+        <span class="nb-label">Prompt 是方向盘，不是过时技巧</span>
+        <span class="nb-arrow">↓</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 02 · PROMPT ============================== -->
+<section class="section" id="prompt">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">02 · Prompt</div>
+      <h2 class="section-title">Prompt 是 LLM 的<em>方向盘</em>，不是过时技巧。</h2>
+      <p class="section-lede">
+        模型越强，prompt 越像方向盘——发散时决定 AI 往哪里想，收敛时决定按什么标准交付。
+      </p>
+    </div>
+
+    <!-- signal row first -->
+    <div class="signal-row">
+      <div class="signal-row-label">
+        LLM 读你的输入，<br>不只是文字 ——<br><b>而是一组信号</b>。
+      </div>
+      <div>
+        <div class="signal-chips">
+          <span class="signal-chip">任务信号</span>
+          <span class="signal-chip">上下文信号</span>
+          <span class="signal-chip">专业度信号</span>
+          <span class="signal-chip">质量标准信号</span>
+        </div>
+        <div class="signal-arrow-block">↓ 共同塑造 LLM 的输出空间</div>
+      </div>
+    </div>
+
+    <!-- divergent / convergent axis -->
+    <div style="margin-top: 48px;">
+      <div class="prompt-axis">
+        <div class="axis-col left">
+          <div class="axis-tag">写法 A · 升维</div>
+          <h3 class="axis-name"><em>发散型</em> Prompt</h3>
+          <div class="axis-goal">目标：打开空间</div>
+          <ul class="axis-bullets">
+            <li>关键词、对比关系、反常识问题</li>
+            <li>把 AI 推进更高价值的思考空间</li>
+            <li>不急着规定格式，不急着控制步骤</li>
+          </ul>
+          <div class="axis-fit"><b>适用</b> · 选题 / 洞察 / 产品方向 / 商业机会</div>
+        </div>
+        <div class="axis-mid">
+          <div class="axis-mid-num">⇄<small>vs</small></div>
+        </div>
+        <div class="axis-col right">
+          <div class="axis-tag">写法 B · 约束</div>
+          <h3 class="axis-name"><em>收敛型</em> Prompt</h3>
+          <div class="axis-goal">目标：稳定交付</div>
+          <ul class="axis-bullets">
+            <li>角色 / 北极星目标 / 证据等级 / 输出结构</li>
+            <li>把"好洞见"从感觉变成可检查条件</li>
+            <li>真正有价值的是质量门槛，不是字数</li>
+          </ul>
+          <div class="axis-fit"><b>适用</b> · 分析报告 / 知识卡片 / 结构化产出</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- jianghu cases -->
+    <div class="case-grid">
+      <div class="case-card">
+        <div class="case-tag"><span class="case-num">1</span> 姜胡说案例 · 认知悖论</div>
+        <h4>"认知悖论"让 AI 去找矛盾结构</h4>
+        <div class="case-snippet">在[个人成长 / 赚钱致富 / 自媒体]领域，普遍存在的<b style="color:var(--accent)">认知悖论</b>是什么——即那些人们<b style="color:var(--accent)">深信不疑</b>，却在根本上<b style="color:var(--accent)">阻碍他们成功</b>的想法。</div>
+        <div class="case-note">
+          三个关键词都在升维：<b>认知悖论</b>找矛盾、<b>深信不疑</b>找共识盲点、<b>阻碍成功</b>找高影响因子。
+        </div>
+        <div class="case-foot">SOURCE · 姜胡说小报童</div>
+      </div>
+      <div class="case-card featured">
+        <div class="case-tag"><span class="case-num">2</span> 姜胡说案例 · 核心数字资产</div>
+        <h4>把产品思考从"市场有什么"换成"我的不对称优势是什么"</h4>
+        <div class="case-snippet">请你找到对我来说已经<b style="color:var(--accent-soft)">轻车熟路</b>，但是对其他人<b style="color:var(--accent-soft)">难如登天</b>的"核心数字资产"，稍加更改对他们来说就特别有用的"产品"。</div>
+        <div class="case-note">
+          "轻车熟路 vs 难如登天"构成<b>价值差</b>——这比"我能做什么产品"好用得多。
+        </div>
+        <div class="case-foot">SOURCE · 姜胡说小报童</div>
+      </div>
+    </div>
+
+    <!-- two tools -->
+    <div class="tool-grid">
+      <article class="tool-card">
+        <div class="tool-icon">P</div>
+        <div class="tool-body">
+          <h4>Prompt Master</h4>
+          <div class="tool-role">把模糊需求 → 可复制 prompt</div>
+          <p>自动补齐任务、目标、输出格式、约束、输入材料、上下文、受众、成功标准。</p>
+          <a class="tool-link" href="https://github.com/nidhinjs/prompt-master" target="_blank" rel="noopener">github.com/nidhinjs/prompt-master ↗</a>
+        </div>
+      </article>
+      <article class="tool-card">
+        <div class="tool-icon">乔</div>
+        <div class="tool-body">
+          <h4>乔木快捷提示词</h4>
+          <div class="tool-role">Chrome 插件 · 把 prompt 变成可复用资产</div>
+          <p>浏览器里管理、搜索、复制、分类常用 prompt——让 prompt 从聊天记录里浮出水面。</p>
+          <a class="tool-link" href="https://chromewebstore.google.com/detail/%E4%B9%94%E6%9C%A8%E5%BF%AB%E6%8D%B7%E6%8F%90%E7%A4%BA%E8%AF%8D/ndfmbdiaclladmoeifbhlkacllmfhjej" target="_blank" rel="noopener">Chrome Web Store ↗</a>
+        </div>
+      </article>
+    </div>
+
+    <div class="nextbar">
+      <span class="nextbar-hint">下一节</span>
+      <a href="#skills">
+        <span class="nb-step">Next · 03</span>
+        <span class="nb-label">Skills 把经验做成能力包</span>
+        <span class="nb-arrow">↓</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 03 · SKILLS ============================== -->
+<section class="section" id="skills">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">03 · Skills</div>
+      <h2 class="section-title">Skills 把反复有效的经验，<em>沉淀成能力包</em>。</h2>
+      <p class="section-lede">
+        Prompt 解决一次对话。Skill 解决一类任务的复用——一个目录、一份 SKILL.md、按需加载的 references / scripts / assets。
+      </p>
+    </div>
+
+    <!-- Progressive disclosure -->
+    <div class="pd-figure">
+      <div class="pd-row">
+        <div class="pd-tier">
+          Tier 0 · 元数据<br>
+          <b>Always loaded</b>
+        </div>
+        <div class="pd-content">
+          <div><code>name</code> · <code>description</code> · 触发条件</div>
+          <div class="pd-when">何时加载 · AI 启动时全部读入，决定要不要往下展开</div>
+        </div>
+      </div>
+      <div class="pd-row">
+        <div class="pd-tier">
+          Tier 1 · 主文档<br>
+          <b>On <em>match</em></b>
+        </div>
+        <div class="pd-content">
+          <div><code>SKILL.md</code> · 完整工作流、禁止事项、检查点</div>
+          <div class="pd-when">何时加载 · 用户请求和 description 匹配时</div>
+        </div>
+      </div>
+      <div class="pd-row">
+        <div class="pd-tier">
+          Tier 2 · 资源<br>
+          <b>On <em>demand</em></b>
+        </div>
+        <div class="pd-content">
+          <div><code>references/*.md</code> · 细节资料</div>
+          <div><code>scripts/*.{sh,py,js}</code> · 可执行脚本</div>
+          <div><code>assets/*</code> · 模板与示例</div>
+          <div class="pd-when">何时加载 · SKILL.md 里 reference 到对应文件时</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Atomic vs monolithic -->
+    <div class="vs-grid">
+      <div class="vs-col left">
+        <div class="vs-head">旧结构 · 反例</div>
+        <h3 class="vs-name">大而全 skill</h3>
+        <div class="vs-chain">
+          <span class="vs-block">获取灵感</span>
+          <span class="vs-arrow">→</span>
+          <span class="vs-block">选题</span>
+          <span class="vs-arrow">→</span>
+          <span class="vs-block">画伞风格</span>
+          <span class="vs-arrow">→</span>
+          <span class="vs-block">手动改写</span>
+          <span class="vs-arrow">→</span>
+          <span class="vs-block">反向优化</span>
+          <span class="vs-arrow">→</span>
+          <span class="vs-block">生成配图</span>
+        </div>
+        <p class="vs-pain">
+          想单独用生图能力时，要从大 skill 里拆。<b>agent 读了很多无关上下文</b>，完整工作流会带偏单点任务——功能越多，边界越模糊。
+        </p>
+      </div>
+      <div class="vs-col right">
+        <div class="vs-head">新结构 · 像乐高</div>
+        <h3 class="vs-name"><em>原子化</em> skills</h3>
+        <div class="vs-chain">
+          <span class="vs-block">analyze</span>
+          <span class="vs-arrow">→</span>
+          <span class="vs-block">outline</span>
+          <span class="vs-arrow">→</span>
+          <span class="vs-block">draft</span>
+          <span class="vs-arrow">→</span>
+          <span class="vs-block">polish</span>
+          <span class="vs-arrow">→</span>
+          <span class="vs-block">ill</span>
+        </div>
+        <p class="vs-pain">
+          skill 的价值来自<b>清晰边界</b>。边界越清楚，越容易单独使用，也越容易组合。
+        </p>
+      </div>
+    </div>
+
+    <!-- Claude Code loop -->
+    <div class="cc-loop">
+      <div class="cc-head">
+        <h3>Claude Code · 让 skill 进入真实工作环境</h3>
+        <span>LLM · Tools · Filesystem · Loop</span>
+      </div>
+      <div class="cc-cycle">
+        <div class="cc-node">
+          <h5>① 理解</h5>
+          <p>读任务、读文件、读上下文</p>
+          <div class="cc-tools">
+            <span>LLM</span><span>Filesystem</span><span>SKILL.md</span>
+          </div>
+        </div>
+        <div class="cc-arrow">▶</div>
+        <div class="cc-node">
+          <h5>② 执行</h5>
+          <p>调脚本、改文件、跑命令</p>
+          <div class="cc-tools">
+            <span>Bash</span><span>Edit</span><span>Git</span><span>MCP</span>
+          </div>
+        </div>
+        <div class="cc-arrow">▶</div>
+        <div class="cc-node">
+          <h5>③ 验证</h5>
+          <p>跑测试、读结果、问人</p>
+          <div class="cc-tools">
+            <span>Tests</span><span>Diff</span><span>权限确认</span>
+          </div>
+        </div>
+      </div>
+      <div class="cc-foot">
+        文件系统让 skill 有地方放，scripts 让 skill 不只是文字说明，<b>测试 + Git + 权限确认</b>让 agent 能闭环验证——这就是 skill 从"提示模板"升级成"能力包"的物理基础。
+      </div>
+    </div>
+
+    <!-- Bash story -->
+    <div class="bash-aside">
+      <div class="bash-lead">
+        <h4>学 AI 的一个习惯<br>把缩写还原成英文</h4>
+        <p>很多 AI 工具、命令行概念都是缩写。还原成完整英文，能快速理解它到底在做什么——也帮你看见工具背后的设计意图。</p>
+      </div>
+      <div class="bash-trail">
+        <div class="bash-line">
+          <div class="bash-cmd">cd<small>change directory</small></div>
+          <div class="bash-mean">每天看见、每天用——还原成英文以后就很直观：<b>切换目录</b>。</div>
+        </div>
+        <div class="bash-line">
+          <div class="bash-cmd">bash<small>Bourne Again Shell</small></div>
+          <div class="bash-mean">Stephen Bourne 写了 <b>sh</b>；Brian Fox 重写增强，叫 <b>Bash</b>——既致敬 Bourne，也借英文 <b>Born Again</b> 的双关。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nextbar">
+      <span class="nextbar-hint">下一节</span>
+      <a href="#harness">
+        <span class="nb-step">Next · 04</span>
+        <span class="nb-label">Harness 把 agent teams 变成可控系统</span>
+        <span class="nb-arrow">↓</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 04 · HARNESS (重头戏) ============================== -->
+<section class="section" id="harness">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">04 · Harness Engineering · 重头戏</div>
+      <h2 class="section-title">Harness 把 agent teams 变成<em>可控系统</em>。</h2>
+      <p class="section-lede">
+        Prompt 管单次质量。Skill 管类型复用。Harness 管<b style="color:var(--ink)">长任务可靠性</b>——一套工程结构，让 AI 在长任务里持续、稳定、可验证地工作。
+      </p>
+    </div>
+
+    <!-- The big architecture diagram (rebuilt as flowchart) -->
+    <div class="hf-frame">
+      <div class="hf-head">
+        <h3>三角色架构 · Orchestrator → Workers → Validator → Decision</h3>
+        <span>Fresh context · Parallel · Independent · Loop</span>
+      </div>
+
+      <div class="hf-canvas">
+        <!-- ROW 1 · Orchestrator -->
+        <div class="hf-center">
+          <div class="hf-orch">
+            <div class="hf-node-tag">Role · Orchestrator</div>
+            <div class="hf-node-name">编排者 / <em>总指挥</em></div>
+            <div class="hf-node-duty">规划 · 调度 · 决定何时并行 · 何时问人 — <b>不直接写实现</b></div>
+          </div>
+        </div>
+
+        <!-- LINK · 1 → 3 fan-out -->
+        <div class="hf-link-fanout">
+          <div class="trunk"></div>
+          <div class="cross"></div>
+          <div class="leaves">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <!-- ROW 2 · 3 Workers in parallel -->
+        <div class="hf-row r-3">
+          <article class="hf-worker">
+            <div class="hf-worker-head">
+              <div class="hf-worker-id">Worker A</div>
+              <div class="hf-worker-pid">pid: fresh</div>
+            </div>
+            <div class="hf-worker-task">Feature 1 · 边界清楚的任务</div>
+            <div class="hf-worker-ctx"><b>Fresh context</b> · 不背前一个 worker 的上下文负担</div>
+          </article>
+          <article class="hf-worker">
+            <div class="hf-worker-head">
+              <div class="hf-worker-id">Worker B</div>
+              <div class="hf-worker-pid">pid: fresh</div>
+            </div>
+            <div class="hf-worker-task">Feature 2 · 并行执行</div>
+            <div class="hf-worker-ctx"><b>无强依赖</b> · 与 A、C 不抢同一份文件</div>
+          </article>
+          <article class="hf-worker">
+            <div class="hf-worker-head">
+              <div class="hf-worker-id">Worker C</div>
+              <div class="hf-worker-pid">pid: fresh</div>
+            </div>
+            <div class="hf-worker-task">Feature 3 · 并行执行</div>
+            <div class="hf-worker-ctx"><b>独立 session</b> · 边界明确，错了不污染主线</div>
+          </article>
+        </div>
+
+        <!-- LINK · 3 parallel arrows -->
+        <div class="hf-link-parallel">
+          <span></span><span></span><span></span>
+        </div>
+
+        <!-- ROW 3 · 3 Handoffs -->
+        <div class="hf-row r-3">
+          <div class="hf-handoff"><b>Handoff A.md</b><span>状态 / 决策 / 已知风险</span></div>
+          <div class="hf-handoff"><b>Handoff B.md</b><span>状态 / 决策 / 已知风险</span></div>
+          <div class="hf-handoff"><b>Handoff C.md</b><span>状态 / 决策 / 已知风险</span></div>
+        </div>
+
+        <!-- LINK · 3 → 1 fan-in -->
+        <div class="hf-link-fanin">
+          <div class="leaves">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="cross"></div>
+          <div class="trunk"></div>
+        </div>
+
+        <!-- ROW 4 · Validator -->
+        <div class="hf-center">
+          <div class="hf-validator">
+            <div class="hf-node-tag">Role · Validator</div>
+            <div class="hf-node-name">验证器 / <em>质检员</em></div>
+            <div class="hf-node-duty">独立模型 · 独立 session · 独立验收标准 — <b>用不同模型暴露盲区</b></div>
+          </div>
+        </div>
+
+        <!-- LINK · single arrow down to decision -->
+        <div class="hf-link-single"></div>
+
+        <!-- ROW 5 · Diamond decision -->
+        <div class="hf-diamond-wrap">
+          <div class="hf-diamond">
+            <div class="hf-diamond-inner">
+              PASS?
+              <small>decision</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- LINK · 1 → 2 split (Yes / No) -->
+        <div class="hf-link-split">
+          <div class="trunk"></div>
+          <div class="cross"></div>
+          <div class="leaves">
+            <div class="leaf-col">
+              <span class="leaf-label yes">Yes</span>
+              <span class="leaf-line"></span>
+            </div>
+            <div class="leaf-col">
+              <span class="leaf-label no">No</span>
+              <span class="leaf-line"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW 6 · branches -->
+        <div class="hf-branches">
+          <div class="hf-branch yes">
+            <div class="hf-branch-flag">PASS</div>
+            <div class="hf-branch-action">进入下一个 milestone</div>
+          </div>
+          <div class="hf-branch no">
+            <div class="hf-branch-flag">FAIL</div>
+            <div class="hf-branch-action">返工 / 拆细 / 补约束 / 升级到人</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="verdict">
+      <div class="verdict-body">
+        Harness 把 AI 协作从"一次生成"推进到 <b>可拆分、可交接、可验证、可恢复</b>。<br>
+        人的角色从"传话筒"变成"决策官"。
+      </div>
+    </div>
+
+    <!-- 4.4 Harness 解决的问题 -->
+    <div class="mm-frame">
+      <div class="mm-head">
+        <h4>Harness 解决了哪些问题</h4>
+        <span>大纲 4.4 · 长任务可靠性的六个维度</span>
+      </div>
+      <div class="mm-body">
+<pre class="mermaid">
+flowchart TB
+    A["长任务可靠性"] --> B["上下文退化"]
+    A --> C["状态继承"]
+    A --> D["任务拆分"]
+    A --> E["验证机制"]
+    A --> F["失败恢复"]
+    A --> G["多 Agent 协作"]
+
+    B --> B1["context window"]
+    B --> B2["context rot"]
+    B --> B3["context pollution"]
+    C --> C1["handoff 文件"]
+    E --> E1["独立 validator"]
+</pre>
+      </div>
+    </div>
+
+    <!-- Practice cards -->
+    <div class="practice-grid">
+      <article class="practice-card">
+        <div class="practice-tag">实践案例 · 自建</div>
+        <h4>FloatTrans · 第一次完整跑 harness</h4>
+        <div class="practice-stats">
+          <div><span>Features</span><b>11</b></div>
+          <div><span>Milestones</span><b>4</b></div>
+          <div><span>核心收获</span><b style="font-size:14px;line-height:1.3">状态传递 ＞ prompt 本身</b></div>
+        </div>
+        <p>Phase 1 拆 11 个 feature / 4 个 milestone。Worker 执行单个任务，Handoff 文件传状态，Validator 独立审查——状态比 prompt 重要得多。</p>
+        <div class="practice-foot">
+          <a href="/Users/yangfan/Documents/HuaSan-LifeOS/03-Projects/FloatTrans/FloatTrans.md" target="_blank">项目入口 ↗</a>
+          <a href="/Users/yangfan/Documents/HuaSan-LifeOS/04-Library/Harness-Engineering/Harness%20Engineering%20%E5%AE%9E%E6%93%8D%E6%8C%87%E5%8D%97.md" target="_blank">实操指南 ↗</a>
+        </div>
+      </article>
+      <article class="practice-card">
+        <div class="practice-tag">实践案例 · 工具</div>
+        <h4>cmux · 多 Agent 的基础设施</h4>
+        <div class="practice-stats">
+          <div><span>能看</span><b style="font-size:14px;line-height:1.3">agent 拓扑</b></div>
+          <div><span>能读</span><b style="font-size:14px;line-height:1.3">屏幕内容</b></div>
+          <div><span>能发</span><b style="font-size:14px;line-height:1.3">任务调度</b></div>
+        </div>
+        <p>cmux 让 Orchestrator 直接调度 Worker / Validator——查看拓扑、读取屏幕、派发任务、收集 handoff。多 agent 协作有了真正的基础设施。</p>
+        <div class="practice-foot">
+          <a href="https://github.com/manaflow-ai/cmux" target="_blank" rel="noopener">github.com/manaflow-ai/cmux ↗</a>
+          <a href="/Users/yangfan/Documents/HuaSan-LifeOS/04-Library/Harness-Engineering/cmux%20%E5%A4%9A%20Agent%20%E5%8D%8F%E4%BD%9C%E6%89%8B%E5%86%8C.md" target="_blank">cmux 手册 ↗</a>
+        </div>
+      </article>
+    </div>
+
+    <!-- 4.7 cmux 多 Agent 实践 -->
+    <div class="mm-frame">
+      <div class="mm-head">
+        <h4>cmux 多 Agent 协作拓扑</h4>
+        <span>大纲 4.7 · 人退一步做决策官</span>
+      </div>
+      <div class="mm-body">
+<pre class="mermaid">
+flowchart LR
+    O["Orchestrator"] -->|cmux send| W1["Worker A"]
+    O -->|cmux send| W2["Worker B"]
+    O -->|cmux send| W3["Worker C"]
+    O -->|cmux send| V["Validator"]
+    W1 -->|handoff| O
+    W2 -->|handoff| O
+    W3 -->|handoff| O
+    V -->|PASS / FAIL| O
+    Human["Human"] -->|关键决策| O
+</pre>
+      </div>
+    </div>
+
+    <div class="honest-note">
+      <div class="honest-note-tag">保持诚实</div>
+      <div>
+        <b>OpenClaw / Hermes Agent</b> 是值得研究的方向，但还没深入用过——本次只讲我真实实践过的 <b>FloatTrans / cmux / harness 经验</b>。不把没验证过的事讲成最佳实践，是这场分享对自己的硬要求。
+      </div>
+    </div>
+
+    <div class="nextbar">
+      <span class="nextbar-hint">下一节</span>
+      <a href="#founder">
+        <span class="nb-step">Next · 05</span>
+        <span class="nb-label">把技术路线放进创业操作系统</span>
+        <span class="nb-arrow">↓</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 05 · FOUNDER OS / OPC ============================== -->
+<section class="section" id="founder">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">05 · Founder OS / OPC</div>
+      <h2 class="section-title">把 prompt / skills / harness 放进<em>创业闭环</em>。</h2>
+      <p class="section-lede">
+        Anthropic 的《The Founder's Playbook》把"Learn by building"收敛成一个清晰节奏：Idea → MVP → Launch → Scale。AI 不只参与 coding，AI 参与全流程。
+      </p>
+    </div>
+
+    <!-- 5.1 本节主线图 -->
+    <div class="mm-frame">
+      <div class="mm-head">
+        <h4>从技术路线到创业操作系统</h4>
+        <span>大纲 5.1 · 本节主线图</span>
+      </div>
+      <div class="mm-body">
+<pre class="mermaid">
+flowchart LR
+    A["技术路线<br/>prompt → skills → harness"] --> B["创业操作系统"]
+    B --> C["Idea"]
+    C --> D["MVP"]
+    D --> E["Launch"]
+    E --> F["Scale"]
+
+    C --> C1["验证问题"]
+    D --> D1["构建最小产品"]
+    E --> E1["发布与反馈"]
+    F --> F1["运营自动化"]
+</pre>
+      </div>
+    </div>
+
+    <!-- 4 stages of founder OS -->
+    <div class="stage-grid">
+      <div class="stage-cell">
+        <div class="stage-num">01</div>
+        <h3 class="stage-name">Idea</h3>
+        <div class="stage-role">验证问题</div>
+        <ul class="stage-list">
+          <li>市场研究 / 竞品分析</li>
+          <li>用户访谈问题设计</li>
+          <li>反证分析</li>
+          <li>需求假设拆解</li>
+        </ul>
+        <div class="stage-q"><b>核心问</b><br>这个问题真实吗？谁有？有没有付费信号？</div>
+      </div>
+      <div class="stage-cell">
+        <div class="stage-num">02</div>
+        <h3 class="stage-name">MVP</h3>
+        <div class="stage-role">人定边界 · AI 加速</div>
+        <ul class="stage-list">
+          <li>只做哪一个核心动作</li>
+          <li>不做哪些功能</li>
+          <li>验收标准</li>
+          <li>什么算失败</li>
+        </ul>
+        <div class="stage-q"><b>核心判断</b><br>AI coding 能力越强，人越要有边界感。</div>
+      </div>
+      <div class="stage-cell">
+        <div class="stage-num">03</div>
+        <h3 class="stage-name">Launch</h3>
+        <div class="stage-role">发布与反馈</div>
+        <ul class="stage-list">
+          <li>landing page / 发布文案</li>
+          <li>FAQ / 用户反馈整理</li>
+          <li>bug triage</li>
+          <li>指标面板</li>
+        </ul>
+        <div class="stage-q"><b>核心观察</b><br>用户失去它，会不会难受？</div>
+      </div>
+      <div class="stage-cell">
+        <div class="stage-num">04</div>
+        <h3 class="stage-name">Scale</h3>
+        <div class="stage-role">运营自动化</div>
+        <ul class="stage-list">
+          <li>周报 / CRM 自动汇总</li>
+          <li>反馈自动归类</li>
+          <li>内容日历自动生成</li>
+          <li>数据异常自动提醒</li>
+        </ul>
+        <div class="stage-q"><b>核心稀缺</b><br>注意力——AI-native Founder OS 把注意力留给判断。</div>
+      </div>
+    </div>
+
+    <div class="stage-loop">
+      <span>Idea</span>
+      <div class="stage-loop-arrow"></div>
+      <span>MVP</span>
+      <div class="stage-loop-arrow"></div>
+      <span>Launch</span>
+      <div class="stage-loop-arrow"></div>
+      <span>Scale</span>
+      <div class="stage-loop-arrow"></div>
+      <b>判断 + 反馈循环</b>
+    </div>
+
+    <!-- Role shift -->
+    <div class="role-shift">
+      <div class="role-side before">
+        <div class="role-tag">Before · 个人执行</div>
+        <h4>Individual<br>Contributor</h4>
+        <p>创始人写每一行代码、回每一封邮件、做每一个 deck。AI 是工具——按下按钮的人是你，瓶颈也是你。</p>
+      </div>
+      <div class="role-mid">
+        <span>Role · Shift</span>
+        <b>→</b>
+        <span>重心上移</span>
+      </div>
+      <div class="role-side after">
+        <div class="role-tag">After · 编排判断</div>
+        <h4><em>Orchestrator</em></h4>
+        <p>AI 承担越来越多执行。创始人更像 orchestrator——关键能力变成判断、取舍、设计系统、定义验收标准。</p>
+      </div>
+    </div>
+
+    <!-- ChatGPT vs Codex split -->
+    <div class="split-grid">
+      <div class="split-col">
+        <div class="split-head">
+          <h4>网页 ChatGPT</h4>
+          <span>想清楚</span>
+        </div>
+        <ul class="split-list">
+          <li>讨论</li>
+          <li>研究</li>
+          <li>需求分析</li>
+          <li>PRD</li>
+          <li>视觉探索</li>
+        </ul>
+        <div class="split-foot">长上下文的对话场景——人和 AI 一起把方向、约束、判断标准磨清楚。</div>
+      </div>
+      <div class="split-col">
+        <div class="split-head">
+          <h4>Codex</h4>
+          <span>做出来</span>
+        </div>
+        <ul class="split-list">
+          <li>读代码</li>
+          <li>改文件</li>
+          <li>跑测试</li>
+          <li>修 bug</li>
+          <li>重构</li>
+        </ul>
+        <div class="split-foot">真实代码库的执行场景——拿到清晰任务后稳定交付，受额度边界约束。</div>
+      </div>
+    </div>
+
+    <div class="nextbar">
+      <span class="nextbar-hint">下一节</span>
+      <a href="#closing">
+        <span class="nb-step">Next · 06</span>
+        <span class="nb-label">AI 最终训练的是人的判断力</span>
+        <span class="nb-arrow">↓</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 06 · CLOSING ============================== -->
+<section class="section" id="closing">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">06 · 最终收束</div>
+      <h2 class="section-title">AI 时代最终需要的，是<em>人的判断力</em>。</h2>
+      <p class="section-lede">
+        AI 能力会继续变强。执行会越来越便宜。普通人要同时练四件事——而最难也最稀缺的，是最后一件。
+      </p>
+    </div>
+
+    <div class="closing-quote">
+      <div class="closing-quote-eyebrow">最终判断</div>
+      <h2>
+        Prompt 训练表达，<br>
+        Skill 训练流程，<br>
+        Harness 训练系统，<br>
+        <em>Founder OS 训练判断</em>。
+      </h2>
+      <div class="final-line">
+        AI 时代最大的风险，是 <b>build 太容易</b>以后，<br>
+        人更容易逃避"这件事到底值不值得做"。
+      </div>
+    </div>
+
+    <!-- 6.1 收束图 -->
+    <div class="mm-frame">
+      <div class="mm-head">
+        <h4>四层能力的递进关系</h4>
+        <span>大纲 6.1 · 整场分享的视觉回顾</span>
+      </div>
+      <div class="mm-body">
+<pre class="mermaid">
+flowchart LR
+    A["Prompt"] --> A1["表达与问题定义"]
+    B["Skills"] --> B1["流程与经验资产"]
+    C["Harness"] --> C1["系统与验证"]
+    D["Founder OS"] --> D1["判断与创业闭环"]
+
+    A --> B
+    B --> C
+    C --> D
+</pre>
+      </div>
+    </div>
+
+    <div class="closing-checks">
+      <div class="closing-check">
+        <div class="cc-q">问 01 · 表达</div>
+        <p>能不能问出高质量问题？</p>
+      </div>
+      <div class="closing-check">
+        <div class="cc-q">问 02 · 流程</div>
+        <p>能不能把经验沉淀成模块？</p>
+      </div>
+      <div class="closing-check">
+        <div class="cc-q">问 03 · 系统</div>
+        <p>能不能把模块组织成系统？</p>
+      </div>
+      <div class="closing-check">
+        <div class="cc-q">问 04 · 判断</div>
+        <p>能不能把系统服务于真实目标？</p>
+      </div>
+    </div>
+
+    <div class="nextbar">
+      <span class="nextbar-hint">回到顶部</span>
+      <a href="#hero">
+        <span class="nb-step">↑ Back</span>
+        <span class="nb-label">回到 prompt → skills → harness → OPC</span>
+        <span class="nb-arrow">↑</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== (removed) 07 · RESOURCES ============================== -->
+
+<footer>
+  <div>画伞 · <b>姜胡说社群分享</b> · 2026 / 05</div>
+  <div><span class="accent">prompt</span> → <span class="accent">skills</span> → <span class="accent">harness</span> → <span class="accent">OPC</span></div>
+</footer>
+
+<script src="./mermaid.min.js"></script>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    securityLevel: 'loose',
+    themeVariables: {
+      background: '#fbf7ef',
+      primaryColor: '#fbf7ef',
+      primaryTextColor: '#1a1714',
+      primaryBorderColor: '#1a1714',
+      lineColor: '#c04a1a',
+      secondaryColor: '#1a1714',
+      secondaryTextColor: '#f0e6d6',
+      secondaryBorderColor: '#1a1714',
+      tertiaryColor: '#efe7d8',
+      tertiaryTextColor: '#1a1714',
+      tertiaryBorderColor: '#1a1714',
+      mainBkg: '#fbf7ef',
+      nodeBorder: '#1a1714',
+      clusterBkg: '#efe7d8',
+      clusterBorder: '#1a1714',
+      titleColor: '#1a1714',
+      edgeLabelBackground: '#f4efe7',
+      fontFamily: '"JetBrains Mono", "Inter", monospace',
+      fontSize: '13px',
+    },
+    flowchart: {
+      curve: 'basis',
+      htmlLabels: true,
+      padding: 14,
+      nodeSpacing: 36,
+      rankSpacing: 44,
+      useMaxWidth: true,
+    },
+    timeline: {
+      useMaxWidth: true,
+    }
+  });
+</script>
+
+<script>
+  // sticky nav active state on scroll
+  const sections = ['hero','map','prompt','skills','harness','founder','closing'];
+  const links = document.querySelectorAll('.topnav-link');
+  const linkByTarget = {};
+  links.forEach(l => linkByTarget[l.dataset.target] = l);
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        links.forEach(l => l.classList.remove('active'));
+        if (linkByTarget[id]) linkByTarget[id].classList.add('active');
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
+
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) io.observe(el);
+  });
+</script>
+
+</body>
+</html>
